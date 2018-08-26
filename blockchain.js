@@ -23,7 +23,11 @@ class Transaction {
    */
   constructor(privateKey, recipient, amount) {
     // Enter your solution here
-
+    this.source = signing.getPublicKey(privateKey);
+    this.recipient = recipient;
+    this.amount = amount;
+    this.signature =  signing.sign(privateKey, this.source + this.recipient + this.amount);
+    
   }
 }
 
@@ -45,6 +49,11 @@ class Block {
    */
   constructor(transactions, previousHash) {
     // Your code here
+    this.transactions = transactions;
+    this.previousHash = previousHash;
+    this.nonce = 1;
+    const hashedBlock = createHash('sha512').update((transactions + previousHash + this.nonce).toString()).digest("hex");
+    this.hash = this.hashedBlock
 
   }
 
@@ -58,8 +67,9 @@ class Block {
    *   properties change.
    */
   calculateHash(nonce) {
-    // Your code here
-
+    const hashedBlock = createHash('sha512').update((this.transactions + this.previousHash + nonce).toString()).digest("hex");
+    this.hash = hashedBlock;
+    this.nonce = nonce;
   }
 }
 
@@ -79,7 +89,8 @@ class Blockchain {
    */
   constructor() {
     // Your code here
-
+    let block = new Block([], null);
+    this.blocks = [block];
   }
 
   /**
@@ -88,6 +99,7 @@ class Blockchain {
   getHeadBlock() {
     // Your code here
 
+    return this.blocks.slice(-1).pop();
   }
 
   /**
@@ -96,7 +108,10 @@ class Blockchain {
    */
   addBlock(transactions) {
     // Your code here
+    let latesBlock = this.getHeadBlock();
+    let newBlock = new Block(transactions, latesBlock)
 
+    return this.blocks.push(newBlock);
   }
 
   /**
@@ -111,6 +126,21 @@ class Blockchain {
   getBalance(publicKey) {
     // Your code here
 
+    let balance = 0;
+    for (let i = 0; i < this.blocks.length; i++) {
+      const trx = this.blocks[i].transactions;
+      for (let j = 0; j < trx.length; j++) {
+        const trn = trx[j];
+        if (trn.source === publicKey) {
+          balance = balance - trn.amount;
+        } else if (trn.recipient === publicKey) {
+          balance = balance + trn.amount;
+        }
+      }
+
+    }
+    return balance;
+    
   }
 }
 
